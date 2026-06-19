@@ -29,7 +29,6 @@ public class LoginTest {
 
     @Test
     public void checkPassword() {
-        driver.findElement(By.cssSelector("#user-name")).sendKeys("standard_user");
         driver.findElement(By.cssSelector("#password")).sendKeys("secret_sauce");
         assertEquals(driver.findElement(By.cssSelector("#password")).getAttribute("value"), "secret_sauce");
 
