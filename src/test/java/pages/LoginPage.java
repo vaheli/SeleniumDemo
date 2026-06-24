@@ -3,17 +3,18 @@ package pages;
 import org.openqa.selenium.*;
 import org.openqa.selenium.NoSuchElementException;
 
-import java.util.*;
-
 public class LoginPage {
     WebDriver driver;
-    public final By loginInput = By.xpath("//*[@id = 'user-name']");
-    public final By passwordInput = By.xpath("//*[@id = 'password']");
-    public final By submitButton = By.xpath("//*[@id = 'login-button']");
-    public final By error = By.xpath("//*[@data-test='error']");
-    public final By errorIconUsername = By.xpath("//div[input[@id='user-name']]" +
+
+    private static final String BASE_URL = "https://www.saucedemo.com/";
+
+    private final By loginInput = By.xpath("//*[@id = 'user-name']");
+    private final By passwordInput = By.xpath("//*[@id = 'password']");
+    private final By submitButton = By.xpath("//*[@id = 'login-button']");
+    private final By error = By.xpath("//*[@data-test='error']");
+    private final By errorIconUsername = By.xpath("//div[input[@id='user-name']]" +
             "//*[@data-icon='times-circle']");
-    public final By errorIconPassword = By.xpath("//div[input[@id='password']]" +
+    private final By errorIconPassword = By.xpath("//div[input[@id='password']]" +
             "//*[@data-icon='times-circle']");
 
     public LoginPage(WebDriver driver) {
@@ -21,12 +22,11 @@ public class LoginPage {
     }
 
     public void open() {
-        driver.get("https://www.saucedemo.com/");
+        driver.get(BASE_URL);
     }
 
     public void login(String username, String password) {
-        driver.findElement(loginInput).sendKeys(username);
-        driver.findElement(passwordInput).sendKeys(password);
+        enterCredentials(username,password);
         driver.findElement(submitButton).click();
     }
 
@@ -35,38 +35,39 @@ public class LoginPage {
         driver.findElement(passwordInput).sendKeys(password);
     }
 
-    public boolean isErrorDisplayed() {
-        try {
-            return driver.findElement(error).isDisplayed();
-        } catch (NoSuchElementException e) {
-            return false;
-        }
-    }
-
     public String getErrorText() {
         return driver.findElement(error).getText();
     }
 
-    public WebElement getFindElement(By locator) {
+    public String loginAttribute() {
+        return getElement(loginInput).getAttribute("value");
+    }
+
+    public String passwordAttribute() {
+        return getElement(passwordInput).getAttribute("value");
+    }
+
+    public String loginButtonAttribute() {
+        return getElement(submitButton).getAttribute("data-test");
+    }
+
+    public boolean isErrorDisplayed() {
+        return isErrorElementDisplayed(error);
+    }
+
+    public boolean isUsernameErrorIconDisplayed() {
+        return isErrorElementDisplayed(errorIconUsername);
+    }
+
+    public boolean isPasswordErrorIconDisplayed() {
+        return isErrorElementDisplayed(errorIconPassword);
+    }
+
+    public WebElement getElement(By locator) {
         return driver.findElement(locator);
     }
 
-    public Map<String, Boolean> areErrorIconsDisplayed(By userLocator, By passwordLocator) {
-        Map<String, Boolean> results = new HashMap<>();
-        try {
-            results.put("username", driver.findElement(userLocator).isDisplayed());
-        } catch (NoSuchElementException e) {
-            results.put("username", false);
-        }
-        try {
-            results.put("password", driver.findElement(passwordLocator).isDisplayed());
-        } catch (NoSuchElementException e) {
-            results.put("password", false);
-        }
-        return results;
-    }
-
-    public boolean isErrorIconDisplayed(By locator) {
+    public boolean isErrorElementDisplayed(By locator) {
         try {
             return driver.findElement(locator).isDisplayed();
         } catch (NoSuchElementException e) {

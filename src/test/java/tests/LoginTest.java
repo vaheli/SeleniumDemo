@@ -1,6 +1,5 @@
 package tests;
 
-import org.openqa.selenium.By;
 import org.testng.annotations.*;
 
 import static org.testng.Assert.*;
@@ -44,7 +43,7 @@ public class LoginTest extends BaseTest {
     public void checkEnterLogin() {
         loginPage.enterCredentials(USERNAME_VALID, PASSWORD_EMPTY);
 
-        String actualUsername = loginPage.getFindElement(loginPage.loginInput).getAttribute("value");
+        String actualUsername = loginPage.loginAttribute();
         assertEquals(actualUsername, USERNAME_VALID, MSG_USERNAME_MISMATCH);
     }
 
@@ -52,7 +51,7 @@ public class LoginTest extends BaseTest {
     public void checkEnterPassword() {
         loginPage.enterCredentials(USERNAME_EMPTY, PASSWORD_VALID);
 
-        String actualPassword = loginPage.getFindElement(loginPage.passwordInput).getAttribute("value");
+        String actualPassword = loginPage.passwordAttribute();
         assertEquals(actualPassword, PASSWORD_VALID, MSG_PASSWORD_MISMATCH);
     }
 
@@ -60,7 +59,7 @@ public class LoginTest extends BaseTest {
     public void checkLoginButton() {
         loginPage.enterCredentials(USERNAME_VALID, PASSWORD_VALID);
 
-        String submitButton = loginPage.getFindElement(loginPage.submitButton).getAttribute("data-test");
+        String submitButton = loginPage.loginButtonAttribute();
         assertEquals(submitButton, LOGIN_BUTTON_DATA_TEST, MSG_BUTTON_ATTRIBUTE);
     }
 
@@ -76,7 +75,7 @@ public class LoginTest extends BaseTest {
     public void checkEmptyLogin() {
         loginPage.login(USERNAME_EMPTY, PASSWORD_VALID);
 
-        assertError(loginPage.errorIconUsername, ERROR_USERNAME_REQUIRED);
+        assertError(loginPage.isUsernameErrorIconDisplayed(), ERROR_USERNAME_REQUIRED);
     }
 
     @Test
@@ -97,44 +96,39 @@ public class LoginTest extends BaseTest {
     public void checkEmptyPassword() {
         loginPage.login(USERNAME_VALID, PASSWORD_EMPTY);
 
-        assertError(loginPage.errorIconPassword, ERROR_PASSWORD_REQUIRED);
+        assertError(loginPage.isPasswordErrorIconDisplayed(), ERROR_PASSWORD_REQUIRED);
     }
 
     @Test
     public void checkIncorrectLogin() {
         loginPage.login(USERNAME_INVALID, PASSWORD_VALID);
 
-        assertError(loginPage.errorIconUsername,ERROR_INVALID_CREDENTIALS);
+        assertError(loginPage.isUsernameErrorIconDisplayed(), ERROR_INVALID_CREDENTIALS);
     }
 
     @Test
     public void checkIncorrectPassword() {
         loginPage.login(USERNAME_VALID, PASSWORD_INVALID);
 
-        assertError(loginPage.errorIconPassword,ERROR_INVALID_CREDENTIALS);
+        assertError(loginPage.isPasswordErrorIconDisplayed(), ERROR_INVALID_CREDENTIALS);
     }
 
     @Test
     public void checkErrorIconDisplayed() {
         loginPage.login(USERNAME_INVALID, PASSWORD_VALID);
 
-        var icons = loginPage.areErrorIconsDisplayed(
-                loginPage.errorIconUsername,
-                loginPage.errorIconPassword
-        );
-
-        assertTrue(icons.get("username"), MSG_ICON_USERNAME);
-        assertTrue(icons.get("password"), MSG_ICON_PASSWORD);
+        assertTrue(loginPage.isUsernameErrorIconDisplayed(), MSG_ICON_USERNAME);
+        assertTrue(loginPage.isUsernameErrorIconDisplayed(), MSG_ICON_PASSWORD);
     }
 
-    private void assertLoginError(String errorText) {
+    private void assertLoginError(String expectedError) {
         assertTrue(loginPage.isErrorDisplayed(), MSG_ERROR_NOT_APPEAR);
-        assertEquals(loginPage.getErrorText(), errorText, MSG_ERROR_TEXT_MISMATCH);
+        assertEquals(loginPage.getErrorText(), expectedError, MSG_ERROR_TEXT_MISMATCH);
     }
 
-    private void assertError(By locator, String message) {
+    private void assertError(boolean isIconDisplayed, String expectedError) {
+        assertTrue(isIconDisplayed, MSG_ICON_NOT_DISPLAYED);
         assertTrue(loginPage.isErrorDisplayed(), MSG_ERROR_NOT_APPEAR);
-        assertTrue(loginPage.isErrorIconDisplayed(locator), MSG_ICON_NOT_DISPLAYED);
-        assertEquals(loginPage.getErrorText(), message, MSG_ERROR_TEXT_MISMATCH);
+        assertEquals(loginPage.getErrorText(), expectedError, MSG_ERROR_TEXT_MISMATCH);
     }
 }

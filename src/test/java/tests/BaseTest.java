@@ -3,8 +3,7 @@ package tests;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.*;
 import org.testng.annotations.*;
-import pages.LoginPage;
-import pages.ProductsPage;
+import pages.*;
 
 import java.time.Duration;
 
