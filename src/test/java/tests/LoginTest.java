@@ -1,15 +1,14 @@
 package tests;
 
+import enums.*;
 import org.testng.annotations.*;
 
 import static org.testng.Assert.*;
 
 public class LoginTest extends BaseTest {
-    private static final String USERNAME_VALID = "standard_user";
     private static final String USERNAME_INVALID = "invalid_user";
     private static final String USERNAME_LOCKED = "locked_out_user";
     private static final String USERNAME_WITH_CAPS = "Standard_user";
-    private static final String PASSWORD_VALID = "secret_sauce";
     private static final String PASSWORD_INVALID = "invalid_password";
     private static final String PASSWORD_EMPTY = "";
     private static final String USERNAME_EMPTY = "";
@@ -31,39 +30,37 @@ public class LoginTest extends BaseTest {
     private static final String MSG_ERROR_NOT_APPEAR = "The error message did not appear!";
     private static final String MSG_ERROR_TEXT_MISMATCH = "The error text does not match!";
     private static final String MSG_ICON_NOT_DISPLAYED = "The error icon is not displayed";
-    private static final String MSG_ICON_USERNAME = MSG_ICON_NOT_DISPLAYED + " in the login field!";
-    private static final String MSG_ICON_PASSWORD = MSG_ICON_NOT_DISPLAYED + " in the password field!";
 
     @BeforeMethod
     private void openURL() {
         loginPage.open();
     }
 
-    @Test
-    public void checkEnterLogin() {
-        loginPage.enterCredentials(USERNAME_VALID, PASSWORD_EMPTY);
-
-        String actualUsername = loginPage.loginAttribute();
-        assertEquals(actualUsername, USERNAME_VALID, MSG_USERNAME_MISMATCH);
+    @DataProvider(name = "fieldTestData")
+    public Object[][] fieldTestData() {
+        return new Object[][]{
+                {USERNAME_VALID, PASSWORD_EMPTY, USERNAME_VALID, FieldType.USERNAME, MSG_USERNAME_MISMATCH},
+                {USERNAME_EMPTY, PASSWORD_VALID, PASSWORD_VALID, FieldType.PASSWORD, MSG_PASSWORD_MISMATCH},
+                {USERNAME_VALID, PASSWORD_VALID, LOGIN_BUTTON_DATA_TEST, FieldType.BUTTON, MSG_BUTTON_ATTRIBUTE},
+        };
     }
 
-    @Test
-    public void checkEnterPassword() {
-        loginPage.enterCredentials(USERNAME_EMPTY, PASSWORD_VALID);
+    @Test(dataProvider = "fieldTestData", testName = "Check field: {2}")
+    public void checkFieldTestData(String username, String password,
+                                   String expectedValue, FieldType expectedFieldType,
+                                   String errorMessage) {
+        loginPage.enterCredentials(username, password);
 
-        String actualPassword = loginPage.passwordAttribute();
-        assertEquals(actualPassword, PASSWORD_VALID, MSG_PASSWORD_MISMATCH);
+        String actualValue = switch (expectedFieldType) {
+            case USERNAME -> loginPage.loginAttribute();
+            case PASSWORD -> loginPage.passwordAttribute();
+            case BUTTON -> loginPage.loginButtonAttribute();
+        };
+
+        assertEquals(actualValue, expectedValue, errorMessage);
     }
 
-    @Test
-    public void checkLoginButton() {
-        loginPage.enterCredentials(USERNAME_VALID, PASSWORD_VALID);
-
-        String submitButton = loginPage.loginButtonAttribute();
-        assertEquals(submitButton, LOGIN_BUTTON_DATA_TEST, MSG_BUTTON_ATTRIBUTE);
-    }
-
-    @Test
+    @Test(testName = "Check click login button")
     public void checkClickLoginButton() {
         loginPage.login(USERNAME_VALID, PASSWORD_VALID);
 
@@ -71,64 +68,41 @@ public class LoginTest extends BaseTest {
         assertEquals(productsPage.getTitle(), PAGE_TITLE_PRODUCTS, MSG_TITLE_MISMATCH);
     }
 
-    @Test
-    public void checkEmptyLogin() {
-        loginPage.login(USERNAME_EMPTY, PASSWORD_VALID);
-
-        assertError(loginPage.isUsernameErrorIconDisplayed(), ERROR_USERNAME_REQUIRED);
+    @DataProvider(name = "incorrectLoginData")
+    public Object[][] loginDataProvider() {
+        return new Object[][]{
+                {USERNAME_EMPTY, PASSWORD_VALID, ERROR_USERNAME_REQUIRED, IconType.USERNAME},
+                {USERNAME_VALID, PASSWORD_EMPTY, ERROR_PASSWORD_REQUIRED, IconType.PASSWORD},
+                {USERNAME_INVALID, PASSWORD_VALID, ERROR_INVALID_CREDENTIALS, IconType.BOTH},
+                {USERNAME_VALID, PASSWORD_INVALID, ERROR_INVALID_CREDENTIALS, IconType.PASSWORD},
+                {USERNAME_LOCKED, PASSWORD_VALID, ERROR_LOCKED_USER, IconType.BOTH},
+                {USERNAME_WITH_CAPS, PASSWORD_VALID, ERROR_INVALID_CREDENTIALS, IconType.BOTH},
+        };
     }
 
-    @Test
-    public void checkLoginWithLockedUser() {
-        loginPage.login(USERNAME_LOCKED, PASSWORD_VALID);
+    @Test(dataProvider = "incorrectLoginData", testName = "Authorization under credits: {0, 1}")
+    public void checkIncorrectLogin(String username, String password,
+                                    String errorMessage, IconType iconType) {
+        loginPage.login(username, password);
 
-        assertLoginError(ERROR_LOCKED_USER);
+        assertError(iconType, errorMessage);
     }
 
-    @Test
-    public void checkLoginWithCapsLock() {
-        loginPage.login(USERNAME_WITH_CAPS, PASSWORD_VALID);
-
-        assertLoginError(ERROR_INVALID_CREDENTIALS);
-    }
-
-    @Test
-    public void checkEmptyPassword() {
-        loginPage.login(USERNAME_VALID, PASSWORD_EMPTY);
-
-        assertError(loginPage.isPasswordErrorIconDisplayed(), ERROR_PASSWORD_REQUIRED);
-    }
-
-    @Test
-    public void checkIncorrectLogin() {
-        loginPage.login(USERNAME_INVALID, PASSWORD_VALID);
-
-        assertError(loginPage.isUsernameErrorIconDisplayed(), ERROR_INVALID_CREDENTIALS);
-    }
-
-    @Test
-    public void checkIncorrectPassword() {
-        loginPage.login(USERNAME_VALID, PASSWORD_INVALID);
-
-        assertError(loginPage.isPasswordErrorIconDisplayed(), ERROR_INVALID_CREDENTIALS);
-    }
-
-    @Test
-    public void checkErrorIconDisplayed() {
-        loginPage.login(USERNAME_INVALID, PASSWORD_VALID);
-
-        assertTrue(loginPage.isUsernameErrorIconDisplayed(), MSG_ICON_USERNAME);
-        assertTrue(loginPage.isUsernameErrorIconDisplayed(), MSG_ICON_PASSWORD);
-    }
-
-    private void assertLoginError(String expectedError) {
+    private void assertError(IconType iconType, String expectedError) {
         assertTrue(loginPage.isErrorDisplayed(), MSG_ERROR_NOT_APPEAR);
         assertEquals(loginPage.getErrorText(), expectedError, MSG_ERROR_TEXT_MISMATCH);
+
+        if (iconType != IconType.NONE) {
+            assertTrue(isErrorIconDisplayed(iconType), MSG_ICON_NOT_DISPLAYED);
+        }
     }
 
-    private void assertError(boolean isIconDisplayed, String expectedError) {
-        assertTrue(isIconDisplayed, MSG_ICON_NOT_DISPLAYED);
-        assertTrue(loginPage.isErrorDisplayed(), MSG_ERROR_NOT_APPEAR);
-        assertEquals(loginPage.getErrorText(), expectedError, MSG_ERROR_TEXT_MISMATCH);
+    private boolean isErrorIconDisplayed(IconType iconType) {
+        return switch (iconType) {
+            case USERNAME -> loginPage.isUsernameErrorIconDisplayed();
+            case PASSWORD -> loginPage.isPasswordErrorIconDisplayed();
+            case BOTH -> loginPage.isUsernameErrorIconDisplayed() && loginPage.isPasswordErrorIconDisplayed();
+            case NONE -> true;
+        };
     }
 }

@@ -1,28 +1,24 @@
 package pages;
 
 import org.openqa.selenium.*;
-import org.openqa.selenium.NoSuchElementException;
 
-public class LoginPage {
-    WebDriver driver;
+public class LoginPage extends BasePage{
+    private static final String ATTRIBUTE_VALUE = "value";
+    private static final String ATTRIBUTE_DATA_TEST = "data-test";
+    private static final String ATTRIBUTE_USERNAME = "username";
+    private static final String ATTRIBUTE_PASSWORD = "password";
+    private static final String ATTRIBUTE_LOGIN_BUTTON = "login-button";
+    private static final String ATTRIBUTE_ERROR = "error";
 
-    private static final String BASE_URL = "https://www.saucedemo.com/";
-
-    private final By loginInput = By.xpath("//*[@id = 'user-name']");
-    private final By passwordInput = By.xpath("//*[@id = 'password']");
-    private final By submitButton = By.xpath("//*[@id = 'login-button']");
-    private final By error = By.xpath("//*[@data-test='error']");
-    private final By errorIconUsername = By.xpath("//div[input[@id='user-name']]" +
-            "//*[@data-icon='times-circle']");
-    private final By errorIconPassword = By.xpath("//div[input[@id='password']]" +
-            "//*[@data-icon='times-circle']");
+    private final By loginInput = By.xpath(DATA_TEXT_PATTERN.formatted(ATTRIBUTE_USERNAME));
+    private final By passwordInput = By.xpath(DATA_TEXT_PATTERN.formatted(ATTRIBUTE_PASSWORD));
+    private final By submitButton = By.xpath(DATA_TEXT_PATTERN.formatted(ATTRIBUTE_LOGIN_BUTTON));
+    private final By error = By.xpath(DATA_TEXT_PATTERN.formatted(ATTRIBUTE_ERROR));
+    private final By errorIconUsername = By.xpath(DATA_ICON_PATTERN.formatted(ATTRIBUTE_USERNAME));
+    private final By errorIconPassword = By.xpath(DATA_ICON_PATTERN.formatted(ATTRIBUTE_PASSWORD));
 
     public LoginPage(WebDriver driver) {
-        this.driver = driver;
-    }
-
-    public void open() {
-        driver.get(BASE_URL);
+        super(driver);
     }
 
     public void login(String username, String password) {
@@ -36,19 +32,19 @@ public class LoginPage {
     }
 
     public String getErrorText() {
-        return driver.findElement(error).getText();
+        return getElement(error).getText();
     }
 
     public String loginAttribute() {
-        return getElement(loginInput).getAttribute("value");
+        return getElement(loginInput,ATTRIBUTE_VALUE);
     }
 
     public String passwordAttribute() {
-        return getElement(passwordInput).getAttribute("value");
+        return getElement(passwordInput,ATTRIBUTE_VALUE);
     }
 
     public String loginButtonAttribute() {
-        return getElement(submitButton).getAttribute("data-test");
+        return getElement(submitButton,ATTRIBUTE_DATA_TEST);
     }
 
     public boolean isErrorDisplayed() {
@@ -67,9 +63,13 @@ public class LoginPage {
         return driver.findElement(locator);
     }
 
+    public String getElement(By locator, String attribute) {
+        return driver.findElement(locator).getAttribute(attribute);
+    }
+
     public boolean isErrorElementDisplayed(By locator) {
         try {
-            return driver.findElement(locator).isDisplayed();
+            return getElement(locator).isDisplayed();
         } catch (NoSuchElementException e) {
             return false;
         }

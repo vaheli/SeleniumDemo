@@ -8,6 +8,9 @@ import pages.*;
 import java.time.Duration;
 
 public class BaseTest {
+    static final String USERNAME_VALID = "standard_user";
+    static final String PASSWORD_VALID = "secret_sauce";
+
     WebDriver driver;
     LoginPage loginPage;
     ProductsPage productsPage;
