@@ -1,67 +1,93 @@
 package tests;
 
-import enums.CartAction;
 import org.testng.annotations.*;
 
 import static org.testng.Assert.*;
 
+/**
+ * Тесты для проверки функциональности управления товарами в корзине.
+ * Включает проверки добавления товаров, отображения значка корзины
+ * и количества товаров.
+ */
 public class ProductsTest extends BaseTest {
+
+    private static final String USERNAME_VALID = "standard_user";
+    private static final String PASSWORD_VALID = "secret_sauce";
     private static final String ITEM_NAME = "Sauce Labs Backpack";
     private static final int ADDED_ITEM_COUNT = 3;
-    private static final String COLOR_BADGE_RGBA = "rgba(226, 35, 26, 1)";
 
     private static final String MSG_BADGE_NOT_APPEAR = "The shopping badge did not appear!!";
     private static final String MSG_BADGE_COLOR_MISMATCH = "The background color of the shopping cart does not match the expected color!";
     private static final String MSG_COUNT_MISMATCH = "The number of purchases in the cart does not match the expected number!";
     private static final String MSG_BUTTON_TEXT_MISMATCH = "The button text does not match the expected text!";
 
-    private static final String EXPECTED_BUTTON_TEXT = "Remove";
-    private static final String ITEM_COUNT = "1";
-
+    /**
+     * Открывает URL и выполняет авторизацию перед каждым тестом.
+     */
     @BeforeMethod
     private void openURL() {
         loginPage.open();
         loginPage.login(USERNAME_VALID, PASSWORD_VALID);
     }
 
+    /**
+     * Поставщик данных для тестов добавления товаров.
+     * Проверяет текст кнопки "Remove", количество товаров в корзине
+     * и цвет фона бейджа корзины.
+     *
+     * @return массив объектов с тестовыми данными
+     */
     @DataProvider(name = "getItems")
     public Object[][] getItems() {
         return new Object[][]{
-                {CartAction.BADGE_VISIBILITY, ITEM_NAME, true, MSG_BADGE_NOT_APPEAR},
-                {CartAction.REMOVE_FROM_CART, ITEM_NAME, EXPECTED_BUTTON_TEXT, MSG_BUTTON_TEXT_MISMATCH},
-                {CartAction.BADGE_COUNT, ITEM_NAME, ITEM_COUNT, MSG_COUNT_MISMATCH},
-                {CartAction.BADGE_COUNT, ADDED_ITEM_COUNT, String.valueOf(ADDED_ITEM_COUNT), MSG_COUNT_MISMATCH},
-                {CartAction.BADGE_COLOR, ITEM_NAME, COLOR_BADGE_RGBA, MSG_BADGE_COLOR_MISMATCH}
+                {ITEM_NAME, "removeItem", "Remove", MSG_BUTTON_TEXT_MISMATCH},
+                {ITEM_NAME, "getCount", "1", MSG_COUNT_MISMATCH},
+                {ITEM_NAME, "getColor", "rgba(226, 35, 26, 1)", MSG_BADGE_COLOR_MISMATCH}
         };
     }
 
-    @Test(dataProvider = "getItems")
-    public void checkGoodsAdded(CartAction action, Object value, Object expected, String message) {
-        addItemToCart(value);
-        assertCartAction(action, expected, message);
-    }
-
-    private void addItemToCart(Object value) {
-        if (value instanceof String) {
-            productsPage.addItemToCart((String) value);
-        } else if (value instanceof Integer) {
-            productsPage.addItemToCart((Integer) value);
-        } else {
-            throw new IllegalArgumentException("Unsupported value type: " + value.getClass().getSimpleName());
-        }
-    }
-
-    private void assertCartAction(CartAction action, Object expected, String expectedMessage) {
-        Object actual = executeAction(action);
-        assertEquals(actual, expected, expectedMessage);
-    }
-
-    private Object executeAction(CartAction action) {
-        return switch (action) {
-            case BADGE_VISIBILITY -> productsPage.isShoppingBadgePresentWithWait();
-            case REMOVE_FROM_CART -> productsPage.removeItemFromCart(ITEM_NAME);
-            case BADGE_COUNT -> productsPage.getShoppingCount();
-            case BADGE_COLOR -> productsPage.getCartBadgeBackgroundColor();
+    /**
+     * Проверяет состояние товара после добавления в корзину.
+     * Тест проверяет текст кнопки, количество товаров и цвет значка.
+     * Тест запускается 5 раз для каждого набора данных.
+     *
+     * @param value    название товара
+     * @param action   действие для проверки (removeItem, getCount, getColor)
+     * @param expected ожидаемый результат
+     * @param message  сообщение об ошибке
+     */
+    @Test(dataProvider = "getItems", testName = "Checking condition", invocationCount = 5)
+    public void checkGoodsAdded(String value, String action, String expected, String message) {
+        productsPage.addItemToCart(value);
+        String actual = switch (action) {
+            case "removeItem" -> productsPage.removeItemFromCart(value);
+            case "getCount" -> productsPage.getShoppingCount();
+            case "getColor" -> productsPage.getCartBadgeBackgroundColor();
+            default -> throw new IllegalArgumentException("Unknown action: " + action);
         };
+        assertEquals(actual, expected, message);
+    }
+
+    /**
+     * Проверяет отображение значка корзины после добавления товара.
+     * Тест запускается 5 раз.
+     */
+    @Test(testName = "Checking Shopping Badge Displayed", invocationCount = 5)
+    public void isShoppingBadgeDisplayed() {
+        productsPage.addItemToCart(ITEM_NAME);
+
+        assertTrue(productsPage.isShoppingBadgePresentWithWait(), MSG_BADGE_NOT_APPEAR);
+    }
+
+    /**
+     * Проверяет добавление нескольких товаров в корзину.
+     * Тест добавляет 3 товара и проверяет количество в корзине.
+     * Тест запускается 5 раз.
+     */
+    @Test(testName = "Checking adding multiple items in cart", invocationCount = 5)
+    public void checkMultipleItemsInCart() {
+        productsPage.addItemToCarts(ADDED_ITEM_COUNT);
+
+        assertEquals(productsPage.getShoppingCount(), Integer.toString(ADDED_ITEM_COUNT), MSG_COUNT_MISMATCH);
     }
 }

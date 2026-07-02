@@ -7,14 +7,21 @@ import pages.*;
 
 import java.time.Duration;
 
+/**
+ * Базовый тестовый класс.
+ * Настраивает Selenium WebDriver и инициализирует страницы
+ * перед выполнением тестов. Закрывает браузер после завершения тестов.
+ */
 public class BaseTest {
-    static final String USERNAME_VALID = "standard_user";
-    static final String PASSWORD_VALID = "secret_sauce";
 
     WebDriver driver;
     LoginPage loginPage;
     ProductsPage productsPage;
 
+    /**
+     * Настраивает драйвер и инициализирует страницы перед каждым тестом.
+     * Запускает Chrome в headless режиме с максимальным размером окна.
+     */
     @BeforeMethod
     public void setUp() {
         ChromeOptions options = new ChromeOptions();
@@ -28,6 +35,9 @@ public class BaseTest {
         productsPage = new ProductsPage(driver);
     }
 
+    /**
+     * Закрывает браузер после выполнения каждого теста.
+     */
     @AfterMethod
     public void close() {
         driver.quit();
