@@ -19,7 +19,7 @@ Faker генерирует случайное имя победителя.
 Поздравляем! Вы выиграли!*/
     private static final Faker faker = new Faker(Locale.of("ru"));
 
-     static void main(String[] args) {
+     public static void main(String[] args) {
          Scanner sc = new Scanner(System.in);
 
          while (true) {
@@ -36,7 +36,7 @@ Faker генерирует случайное имя победителя.
                      "\nВаше имя: " + inputName +
                      "\nПобедитель: " + winnerName);
 
-             if (inputName.equals(winnerName)) {
+             if (inputName.equalsIgnoreCase(winnerName)) {
                  System.out.println("Поздравляем! Вы выиграли!");
              } else {
                  System.out.println("Вы не выиграли");

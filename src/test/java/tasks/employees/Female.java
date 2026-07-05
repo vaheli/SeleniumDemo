@@ -8,5 +8,4 @@ public class Female {
     public String getRole(String role) {
         return role;
     }
-
 }

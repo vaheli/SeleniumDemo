@@ -16,7 +16,7 @@ public class EmployeesTest {
     }
 
     public String employeesToPrint() {
-        return "Вчера наша компания пополнилась новыми сотрудниками. " + male.getName(maleName) + " нанят на" + "\n" +
+        return "Вчера наша компания пополнилась новыми сотрудниками. " + male.getName(maleName) + " нанят на" +
                 "должность " + male.getRole(maleRole) + ", а " + female.getName(femaleName) + " нанята в должности: " +
                 female.getRole(femaleRole) + ".";
     }
