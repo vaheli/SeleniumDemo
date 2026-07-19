@@ -12,26 +12,74 @@
         <maven.compiler.source>26</maven.compiler.source>
         <maven.compiler.target>26</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <selenium-version>4.45.0</selenium-version>
+        <webdrivermanager-version>6.3.4</webdrivermanager-version>
+        <testng-version>7.12.0</testng-version>
+        <slf4j-nop-version>2.0.18</slf4j-nop-version>
+        <aspectjweaver-version>1.9.25.1</aspectjweaver-version>
+        <allure-maven-version>2.10.0</allure-maven-version>
+        <allure-version>2.29.1</allure-version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
-            <version>4.45.0</version>
+            <version>${selenium-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>${webdrivermanager-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>7.12.0</version>
+            <version>${testng-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-nop</artifactId>
-            <version>2.0.18</version>
+            <version>${slf4j-nop-version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>${aspectjweaver-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-testng</artifactId>
+            <version>${allure-version}</version>
+        </dependency>
+
     </dependencies>
-         
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+
+                <version>3.0.0-M3</version>
+                <configuration>
+                    <argLine>
+                        -javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectjweaver-version}/aspectjweaver-${aspectjweaver-version}.jar
+                        -Xmx256m
+                    </argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-maven</artifactId>
+                <version>${allure-maven-version}</version>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

@@ -1,14 +1,11 @@
 package pages;
 
+import io.qameta.allure.Step;
 import org.openqa.selenium.*;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import user.User;
 
-/**
- * Страница авторизации (Login Page).
- * Содержит методы для ввода учетных данных, авторизации
- * и проверки сообщений об ошибках.
- */
 public class LoginPage extends BasePage {
-
     private static final String ATTRIBUTE_USERNAME = "username";
     private static final String ATTRIBUTE_PASSWORD = "password";
 
@@ -19,94 +16,48 @@ public class LoginPage extends BasePage {
     private final By errorIconUsername = By.xpath(DATA_ICON_PATTERN.formatted(ATTRIBUTE_USERNAME));
     private final By errorIconPassword = By.xpath(DATA_ICON_PATTERN.formatted(ATTRIBUTE_PASSWORD));
 
-    /**
-     * Конструктор страницы входа.
-     *
-     * @param driver драйвер Selenium для взаимодействия с браузером
-     */
     public LoginPage(WebDriver driver) {
         super(driver);
     }
 
-    /**
-     * Выполняет авторизацию с указанными учетными данными.
-     *
-     * @param username имя пользователя
-     * @param password пароль
-     */
-    public void login(String username, String password) {
-        enterCredentials(username, password);
+    @Step("Логинимся под кредами пользователя = {user}")
+    public void login(User user) {
+        enterCredentials(user);
         driver.findElement(submitButton).click();
     }
 
-    /**
-     * Вводит учетные данные в соответствующие поля.
-     *
-     * @param username имя пользователя
-     * @param password пароль
-     */
-    public void enterCredentials(String username, String password) {
-        driver.findElement(loginInput).sendKeys(username);
-        driver.findElement(passwordInput).sendKeys(password);
-    }
-
-    /**
-     * Возвращает текст сообщения об ошибке.
-     *
-     * @return текст ошибки
-     */
+    @Step("Получаем текст ошибки")
     public String getErrorText() {
-        return getElement(error).getText();
+        return getWebElement(error).getText();
     }
 
-    /**
-     * Проверяет, отображается ли сообщение об ошибке.
-     *
-     * @return true если ошибка отображается, иначе false
-     */
+    @Step("Проверяем отображение сообщения об ошибке")
     public boolean isErrorDisplayed() {
         return isErrorElementDisplayed(error);
     }
 
-    /**
-     * Проверяет, отображается ли иконка ошибки для поля имени пользователя.
-     *
-     * @return true если иконка отображается, иначе false
-     */
+    @Step("Проверяем отображение иконки ошибки для поля логина")
     public boolean isUsernameErrorIconDisplayed() {
         return isErrorElementDisplayed(errorIconUsername);
     }
 
-    /**
-     * Проверяет, отображается ли иконка ошибки для поля пароля.
-     *
-     * @return true если иконка отображается, иначе false
-     */
+    @Step("Проверяем отображение иконки ошибки для поля пароля")
     public boolean isPasswordErrorIconDisplayed() {
         return isErrorElementDisplayed(errorIconPassword);
     }
 
-    /**
-     * Находит элемент по локатору.
-     *
-     * @param locator локатор элемента
-     * @return найденный элемент
-     */
-    public WebElement getElement(By locator) {
-        return driver.findElement(locator);
-    }
-
-    /**
-     * Проверяет, отображается ли элемент по локатору.
-     *
-     * @param locator локатор элемента
-     * @return true если элемент отображается, иначе false
-     */
+    @Step("Получаем элемент об ошибки по локатору")
     public boolean isErrorElementDisplayed(By locator) {
         try {
-            return getElement(locator).isDisplayed();
+            return wait.until(ExpectedConditions.presenceOfElementLocated(locator)).isDisplayed();
         } catch (NoSuchElementException e) {
             return false;
         }
+    }
+
+    @Step("Заполняем поля ввода логина: '{user.login}' и пароля: '{user.password}'")
+    private void enterCredentials(User user) {
+        driver.findElement(loginInput).sendKeys(user.getLogin());
+        driver.findElement(passwordInput).sendKeys(user.getPassword());
     }
 }
