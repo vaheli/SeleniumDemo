@@ -17,7 +17,8 @@ public class CheckoutCompletePage extends BasePage{
     }
 
     @Step("Нажимаем на кнопку 'Back Home'")
-    public void clickBackToProductsPage() {
+    public ProductsPage clickBackToProductsPage() {
         getWebElement(BACK_HOME_BUTTON).click();
+        return new ProductsPage(driver);
     }
 }

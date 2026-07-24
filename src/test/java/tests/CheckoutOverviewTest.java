@@ -2,11 +2,16 @@ package tests;
 
 import io.qameta.allure.*;
 import org.testng.annotations.*;
+import pages.BasketPage;
+import pages.CheckoutCompletePage;
+import pages.ProductsPage;
 import utils.PropertyReader;
 
 import java.util.List;
 
 import static enums.TitleNaming.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.withPrecision;
 import static org.testng.Assert.*;
 import static pages.BasePage.BASE_URL;
 import static user.UserFactory.whitAdminPermission;
@@ -18,85 +23,118 @@ import static user.UserFactory.whitAdminPermission;
 public class CheckoutOverviewTest extends BaseTest {
     private static final String URL_INVENTORY = BASE_URL + "inventory.html";
     private static final String URL_CHECKOUT_COMPLETE = BASE_URL + "checkout-complete.html";
-    private static final List<String> ITEM_NAMES = List.of("Sauce Labs Backpack", "Sauce Labs Bike Light", "Sauce Labs Bolt T-Shirt");
+    private static final List<String> ITEM_NAMES = List.of(
+            "Sauce Labs Backpack", "Sauce Labs Bike Light", "Sauce Labs Bolt T-Shirt"
+    );
+    private static final String EXPECTED_COLOR_RGB = "61, 220, 145";
 
     private static final String firstName = PropertyReader.getProperty("saucedemo.first_name");
     private static final String lastName = PropertyReader.getProperty("saucedemo.last_name");
     private static final String postalCode = PropertyReader.getProperty("saucedemo.postal_code");
+    private static final int EXPECTED_MENU_ITEMS_COUNT = 4;
 
-    private static final String MSG_BADGE_NOT_APPEAR = "The shopping badge did not appear!";
-    private static final String MSG_TITLE_MISMATCH = "The page title doesn't match";
-    private static final String MSG_URL_MISMATCH = "The URL does not match the expected! Redirect to page failed!";
+    private static final String MENU_ITEMS_COUNT_DESCRIPTION = "Number of items in the menu (should be %d)";
+    private static final String TITLE_DESCRIPTION = "Page title (expected: '%s')";
+    private static final String SHOPPING_BADGE_DESCRIPTION = "An icon with the number of items in the basket";
+    private static final String MSG_TITLE_MISMATCH = "The page title does not match! Expected: '%s'";
+    private static final String MSG_URL_REDIRECT_CHECKOUT_COMPLETE = "Redirect should lead to Checkout complete page URL";
+    private static final String MSG_URL_REDIRECT_PRODUCTS = "Redirect should lead to Products page URL";
     private static final String MSG_TOTAL_PRICE_MISMATCH =
-            "The total amount of goods does not match the expected amount!";
-    private static final String MSG_FINISH_COLOR_MISMATCH = "The background color of the finish button does not match the expected color!";
+            "The total amount of goods does not match! Expected: %.2f, received: %.2f";
+    private static final String MSG_FINISH_COLOR_MISMATCH =
+            "The background color of the finish button does not match the expected color!";
+
+    private static final String EXPECTED_HEADER_TITLE = HEADER.getDisplayName();
+    private static final String EXPECTED_HEADER_SUBTITLE = FINISH.getDisplayName();
 
     @BeforeMethod
     private void openURL() {
         loginPage.open();
         loginPage.login(whitAdminPermission());
+        loginPage.clickLoginButton();
         productsPage
                 .addItemsToCarts(ITEM_NAMES)
-                .navigationPanel.clickShoppingCart();
-        basketPage.getCheckout().click();
+                .navigationPanel
+                .clickShoppingCart(BasketPage.class);
+        basketPage.clickCheckoutButton();
         checkoutPage.fillCheckoutForm(firstName, lastName, postalCode);
-        checkoutPage.getContinueButton().click();
+        checkoutPage.clickContinueButton();
     }
 
-    @Story("Проверяем заголовок страницы")
+    @Story("Проверка заголовка страницы")
     @Severity(SeverityLevel.MINOR)
     @Test(invocationCount = TEST_REPEAT_COUNT)
-    public void checkMainTitle() {
-        assertEquals(checkHeaderTitle(), HEADER.getDisplayName(), MSG_TITLE_MISMATCH);
+    public void mainTitleShouldBeCorrect() {
+        String headerTitle = checkoutOverviewPage.navigationPanel.getHeaderTitle();
+        assertThat(headerTitle)
+                .as(TITLE_DESCRIPTION, EXPECTED_HEADER_TITLE)
+                .isEqualTo(EXPECTED_HEADER_TITLE);
     }
 
-    @Story("Проверяем переход на страницу 'Оформление заказа завершено!'")
+    @Story("Завершение оформления заказа")
     @Severity(SeverityLevel.CRITICAL)
     @Test(invocationCount = TEST_REPEAT_COUNT)
     public void checkSwitchFinishButton() {
-        checkoutOverviewPage.getFinishButton().click();
+        CheckoutCompletePage completePage = checkoutOverviewPage.clickFinishButton();
 
-        assertEquals(driver.getCurrentUrl(), URL_CHECKOUT_COMPLETE, MSG_URL_MISMATCH);
-        assertEquals(basketPage.navigationPanel.getPageTitle(), FINISH.getDisplayName(), MSG_TITLE_MISMATCH);
+        assertThat(completePage.getCurrentUrl())
+                .as(MSG_URL_REDIRECT_CHECKOUT_COMPLETE)
+                .isEqualTo(URL_CHECKOUT_COMPLETE);
+
+        assertThat(basketPage.navigationPanel.getPageTitle())
+                .as(MSG_TITLE_MISMATCH, EXPECTED_HEADER_SUBTITLE)
+                .isEqualTo(EXPECTED_HEADER_SUBTITLE);
     }
 
     @Story("Проверяем количество ссылок в 'Бургер-Меню'")
     @Severity(SeverityLevel.NORMAL)
     @Test(invocationCount = TEST_REPEAT_COUNT)
-    public void checkClickBurgerMenu() {
+    public void checkBurgerMenuItemsCount() {
         checkoutOverviewPage.navigationPanel.clickBurgerMenu();
 
-        assertEquals(checkoutOverviewPage.navigationPanel.getMenuItemsCount(), 4);
+        assertThat(checkoutOverviewPage.navigationPanel.getMenuItemsCount())
+                .as(MENU_ITEMS_COUNT_DESCRIPTION, EXPECTED_MENU_ITEMS_COUNT)
+                .isEqualTo(EXPECTED_MENU_ITEMS_COUNT);
     }
 
-    @Story("Проверяем значок корзины покупок")
+    @Story("Проверка отображения значка корзины покупок")
     @Severity(SeverityLevel.CRITICAL)
     @Test(invocationCount = TEST_REPEAT_COUNT)
-    public void isShoppingCartDisplayed() {
-        assertTrue(navigationPanel.isShoppingBadgePresentWithWait(), MSG_BADGE_NOT_APPEAR);
+    public void shoppingCartBadgeShouldBeDisplayed() {
+        assertThat(navigationPanel.isShoppingBadgePresentWithWait())
+                .as(SHOPPING_BADGE_DESCRIPTION)
+                .isTrue();
     }
 
     @Story("Проверяем возврат на страницу 'Products'")
     @Severity(SeverityLevel.CRITICAL)
     @Test(invocationCount = TEST_REPEAT_COUNT)
-    public void checkSwitchToProductsByCancel() {
-        checkoutOverviewPage.getCancelButton().click();
+    public void shouldRedirectToBasketPageAfterCancelButtonClick() {
+        ProductsPage page = checkoutOverviewPage.clickCancelButton();
 
-        assertEquals(driver.getCurrentUrl(), URL_INVENTORY, MSG_URL_MISMATCH);
+        assertThat(page.getCurrentUrl())
+                .as(MSG_URL_REDIRECT_PRODUCTS)
+                .isEqualTo(URL_INVENTORY);
     }
 
-    @Story("Проверяем итого с общей суммой товаров")
+    @Story("Проверка итоговой суммы товаров")
     @Severity(SeverityLevel.CRITICAL)
     @Test(invocationCount = TEST_REPEAT_COUNT)
     public void checkTotalAmountOfGoods() {
-        assertEquals(checkoutOverviewPage.getItemsPrice(), checkoutOverviewPage.getItemTotal(), MSG_TOTAL_PRICE_MISMATCH);
+        double actualTotal = checkoutOverviewPage.getTotalItemsPrice();
+        double expectedTotal = checkoutOverviewPage.getItemTotal();
+
+        assertThat(actualTotal)
+                .as(MSG_TOTAL_PRICE_MISMATCH, expectedTotal, actualTotal)
+                .isEqualTo(expectedTotal, withPrecision(0.01));
     }
 
     @Story("Проверяем цвет фона кнопки 'Finish'")
     @Severity(SeverityLevel.MINOR)
     @Test(invocationCount = TEST_REPEAT_COUNT)
     public void checkFinishButtonBackgroundColor() {
-        assertEquals(checkoutOverviewPage.getFinishButtonBackgroundColor(),
-                "rgba(61, 220, 145, 1)", MSG_FINISH_COLOR_MISMATCH);
+        assertThat(checkoutOverviewPage.getFinishButtonBackgroundColor())
+                .as(MSG_FINISH_COLOR_MISMATCH)
+                .contains(EXPECTED_COLOR_RGB);
     }
 }

@@ -15,18 +15,40 @@ public class BasketPage extends BasePage {
     }
 
     @Step("Получаем название товаров")
-    public ArrayList<String> getProductsNames() {
+    public List<String> getProductsNames() {
         List<WebElement> allProducts = driver.findElements(GOODS_TITLE);
-        ArrayList<String> productNames = new ArrayList<>();
+        List<String> productNames = new ArrayList<>();
         for (WebElement product : allProducts) {
             productNames.add(product.getText());
         }
         return productNames;
     }
 
+    @Step("Нажимаем на кнопку 'Continue Shopping'")
+    public ProductsPage clickContinueShoppingButton() {
+        getContinueShopping().click();
+        return new ProductsPage(driver);
+    }
+
+    @Step("Проверяем, что кнопка 'Checkout' отображается")
+    public boolean isDisplayedCheckoutButton() {
+        return getCheckoutButton().isDisplayed();
+    }
+
+    @Step("Нажимаем на кнопку 'Checkout'")
+    public CheckoutPage clickCheckoutButton() {
+        getCheckoutButton().click();
+        return new CheckoutPage(driver);
+    }
+
+    @Step("Получаем текст кнопки 'Continue Shopping'")
+    public String getContinueShoppingButtonText() {
+        return getContinueShopping().getText();
+    }
+
     @Step("Получаем локатор кнопки 'Checkout'")
-    public WebElement getCheckout() {
-       return getWebElement(CHECKOUT_BUTTON);
+    public WebElement getCheckoutButton() {
+        return getWebElement(CHECKOUT_BUTTON);
     }
 
     @Step("Получаем локатор кнопки 'Continue Shopping'")

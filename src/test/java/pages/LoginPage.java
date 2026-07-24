@@ -23,7 +23,12 @@ public class LoginPage extends BasePage {
     @Step("Логинимся под кредами пользователя = {user}")
     public void login(User user) {
         enterCredentials(user);
+    }
+
+    @Step("Нажимаем кнопку 'Login' и переходим на страницу товаров")
+    public ProductsPage clickLoginButton() {
         driver.findElement(submitButton).click();
+        return new ProductsPage(driver);
     }
 
     @Step("Получаем текст ошибки")

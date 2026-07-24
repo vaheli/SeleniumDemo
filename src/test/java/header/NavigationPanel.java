@@ -12,9 +12,8 @@ import static pages.BasePage.DATA_TEXT_PATTERN;
 public class NavigationPanel {
     private static final By PAGE_TITLE = By.xpath(DATA_TEXT_PATTERN.formatted("title"));
     private static final By HEADER_TITLE = By.cssSelector(".app_logo");
-    private static final By cartLink = By.cssSelector(".shopping_cart_link");
-    private static final By burgerMenu = By.cssSelector("#react-burger-menu-btn");
-    private static final By menuItemLocator = By.cssSelector(".menu-item");
+    private static final By BURGER_MENU = By.cssSelector("#react-burger-menu-btn");
+    private static final By MENU_ITEMS = By.cssSelector(".menu-item");
     private static final By SHOPPING_CART_BADGE = By.xpath(DATA_TEXT_PATTERN.formatted("shopping-cart-badge"));
     private static final By SHOPPING_CART_LINK = By.xpath(DATA_TEXT_PATTERN.formatted("shopping-cart-link"));
 
@@ -28,15 +27,20 @@ public class NavigationPanel {
 
     @Step("Открываем 'Бургер-Меню'")
     public void clickBurgerMenu() {
-        driver.findElement(burgerMenu).click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(BURGER_MENU)).click();
     }
 
     @Step("Кликаем 'Корзина покупок'")
-    public void clickShoppingCart() {
-        wait.until(ExpectedConditions.presenceOfElementLocated(cartLink)).click();
+    public <T> T clickShoppingCart(Class<T> pageClass) {
+        wait.until(ExpectedConditions.visibilityOfElementLocated(SHOPPING_CART_LINK)).click();
+        try {
+            return pageClass.getDeclaredConstructor(WebDriver.class).newInstance(driver);
+        } catch (Exception e) {
+            throw new RuntimeException("Не удалось создать экземпляр страницы: " + pageClass.getName(), e);
+        }
     }
 
-    @Step("Получаем локатор заголовка страницы")
+    @Step("Получаем заголовок хедера")
     public String getHeaderTitle() {
         return getTitle(HEADER_TITLE);
     }
@@ -48,7 +52,7 @@ public class NavigationPanel {
 
     @Step("Получаем количество ссылок 'Бургер-Меню'")
     public int getMenuItemsCount() {
-        List<WebElement> menuItems = driver.findElements(menuItemLocator);
+        List<WebElement> menuItems = driver.findElements(MENU_ITEMS);
 
         return menuItems.size();
     }
@@ -62,6 +66,11 @@ public class NavigationPanel {
         }
     }
 
+    @Step("Проверяем, пуста ли корзина")
+    public boolean isCartEmpty() {
+        return getShoppingCount().isEmpty() || getShoppingCount().equals("0");
+    }
+
     @Step("Проверяем, отображается значок 'Корзины товаров'")
     public boolean isShoppingBadgePresentWithWait() {
         try {
@@ -72,7 +81,7 @@ public class NavigationPanel {
     }
 
     @Step("Проверяем цвет фона значка 'Корзины товаров'")
-    public String getCartBadgeBackgroundColor() {
+    public String getBadgeColor() {
         return getShoppingCartBadgeWait().getCssValue("background-color");
     }
 

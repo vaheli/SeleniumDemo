@@ -2,12 +2,14 @@ package tests;
 
 import io.qameta.allure.*;
 import org.testng.annotations.*;
+import pages.BasketPage;
+import pages.ProductsPage;
 import utils.PropertyReader;
 
 import java.util.List;
 
 import static enums.TitleNaming.HEADER;
-import static org.testng.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static pages.BasePage.BASE_URL;
 import static user.UserFactory.whitAdminPermission;
 
@@ -17,66 +19,85 @@ import static user.UserFactory.whitAdminPermission;
 @TmsLink("SeleniumDemo")
 public class CheckoutCompleteTest extends BaseTest {
     private static final String URL_INVENTORY = BASE_URL + "inventory.html";
-    private static final List<String> ITEM_NAMES = List.of("Sauce Labs Backpack", "Sauce Labs Bike Light", "Sauce Labs Bolt T-Shirt");
+    private static final List<String> ITEM_NAMES = List.of(
+            "Sauce Labs Backpack", "Sauce Labs Bike Light", "Sauce Labs Bolt T-Shirt"
+    );
     private static final String firstName = PropertyReader.getProperty("saucedemo.first_name");
     private static final String lastName = PropertyReader.getProperty("saucedemo.last_name");
     private static final String postalCode = PropertyReader.getProperty("saucedemo.postal_code");
+    private static final int EXPECTED_MENU_ITEMS_COUNT = 4;
 
-    private static final String MSG_BADGE_NOT_APPEAR = "The shopping badge did not appear!";
-    private static final String MSG_URL_MISMATCH = "The URL does not match the expected! Redirect to page failed!";
-    private static final String MSG_TITLE_MISMATCH = "The page title doesn't match";
-    private static final String MSG_THANK_YOU_MISMATCH =
-            "The message 'Thank you for your order!' doesn't match";
+    private static final String MENU_ITEMS_COUNT_DESCRIPTION = "Number of items in the menu (should be %d)";
+    private static final String SHOPPING_BADGE_DESCRIPTION = "An icon with the number of items in the basket";
+    private static final String THANK_YOU_MESSAGE_DESCRIPTION = "The text of the message after the successful order";
+    private static final String TITLE_DESCRIPTION = "Page title (expected: '%s')";
+    private static final String MSG_URL_REDIRECT = "Redirect should lead to Products page URL";
     private static final String EXPECTED_THANK_YOU = "Thank you for your order!";
+
+    private static final String EXPECTED_TITLE = HEADER.getDisplayName();
 
     @BeforeMethod
     private void openURL() {
         loginPage.open();
         loginPage.login(whitAdminPermission());
+        loginPage.clickLoginButton();
         productsPage
                 .addItemsToCarts(ITEM_NAMES)
-                .navigationPanel.clickShoppingCart();
-        basketPage.getCheckout().click();
+                .navigationPanel
+                .clickShoppingCart(BasketPage.class);
+        basketPage.clickCheckoutButton();
         checkoutPage.fillCheckoutForm(firstName, lastName, postalCode);
-        checkoutPage.getContinueButton().click();
-        checkoutOverviewPage.getFinishButton().click();
+        checkoutPage.clickContinueButton();
+        checkoutOverviewPage.clickFinishButton();
     }
 
-    @Story("Проверяем заголовок страницы")
+    @Story("Проверка заголовка страницы")
     @Severity(SeverityLevel.MINOR)
     @Test(invocationCount = TEST_REPEAT_COUNT)
-    public void checkMainTitle() {
-        assertEquals(checkHeaderTitle(), HEADER.getDisplayName(), MSG_TITLE_MISMATCH);
+    public void mainTitleShouldBeCorrect() {
+        String headerTitle = checkoutCompletePage.navigationPanel.getHeaderTitle();
+        assertThat(headerTitle)
+                .as(TITLE_DESCRIPTION, EXPECTED_TITLE)
+                .isEqualTo(EXPECTED_TITLE);
     }
 
     @Story("Проверяем количество ссылок в 'Бургер-Меню'")
     @Severity(SeverityLevel.NORMAL)
     @Test(invocationCount = TEST_REPEAT_COUNT)
-    public void checkClickBurgerMenu() {
+    public void checkBurgerMenuItemsCount() {
         checkoutPage.navigationPanel.clickBurgerMenu();
 
-        assertEquals(checkoutPage.navigationPanel.getMenuItemsCount(), 4);
+        assertThat(checkoutPage.navigationPanel.getMenuItemsCount())
+                .as(MENU_ITEMS_COUNT_DESCRIPTION, EXPECTED_MENU_ITEMS_COUNT)
+                .isEqualTo(EXPECTED_MENU_ITEMS_COUNT);
     }
 
-    @Story("Проверяем значок корзины покупок")
+    @Story("Проверка отображения значка корзины покупок")
     @Severity(SeverityLevel.CRITICAL)
     @Test(invocationCount = TEST_REPEAT_COUNT)
-    public void isShoppingCartDisplayed() {
-        assertTrue(navigationPanel.isShoppingBadgePresentWithWait(), MSG_BADGE_NOT_APPEAR);
+    public void shoppingCartBadgeShouldBeDisplayed() {
+        assertThat(navigationPanel.isShoppingBadgePresentWithWait())
+                .as(SHOPPING_BADGE_DESCRIPTION)
+                .isTrue();
     }
 
-    @Story("Проверяем, что отображается сообщение")
+    @Story("Проверка сообщения благодарности после оформления заказа")
     @Severity(SeverityLevel.CRITICAL)
     @Test(invocationCount = TEST_REPEAT_COUNT)
-    public void checkThankYouMessageTest() {
-        assertEquals(checkoutCompletePage.getThankYouMessage(), EXPECTED_THANK_YOU, MSG_THANK_YOU_MISMATCH);
+    public void shouldDisplayThankYouMessage() {
+        assertThat(checkoutCompletePage.getThankYouMessage())
+                .as(THANK_YOU_MESSAGE_DESCRIPTION)
+                .isEqualTo(EXPECTED_THANK_YOU);
     }
 
     @Story("Проверяем возврат на страницу 'Products'")
     @Severity(SeverityLevel.CRITICAL)
     @Test(invocationCount = TEST_REPEAT_COUNT)
-    public void checkBackToProductsPage() {
-        checkoutCompletePage.clickBackToProductsPage();
-        assertEquals(driver.getCurrentUrl(), URL_INVENTORY, MSG_URL_MISMATCH);
+    public void shouldRedirectToProductsPageAfterBackButtonClick() {
+        ProductsPage page = checkoutCompletePage.clickBackToProductsPage();
+
+        assertThat(page.getCurrentUrl())
+                .as(MSG_URL_REDIRECT)
+                .isEqualTo(URL_INVENTORY);
     }
 }

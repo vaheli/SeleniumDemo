@@ -15,14 +15,16 @@ public class CheckoutOverviewPage extends BasePage{
         super(driver);
     }
 
-    @Step("Получаем локатор кнопки 'Finish'")
-    public WebElement getFinishButton() {
-        return getWebElement(FINISH);
+    @Step("Нажимаем кнопку 'Finish' для завершения заказа")
+    public CheckoutCompletePage clickFinishButton() {
+        getFinishButton().click();
+        return new CheckoutCompletePage(driver);
     }
 
-    @Step("Получаем локатор кнопки 'Cancel'")
-    public WebElement getCancelButton() {
-        return getWebElement(CANCEL);
+    @Step("Нажимаем кнопку 'Cancel' для отмены заказа")
+    public ProductsPage clickCancelButton() {
+        getCancelButton().click();
+        return new ProductsPage(driver);
     }
 
     @Step("Получаем цвет фона кнопки 'Finish'")
@@ -30,8 +32,8 @@ public class CheckoutOverviewPage extends BasePage{
         return getWebElement(FINISH).getCssValue("background-color");
     }
 
-    @Step("Получаем общий итог всех товаров в корзине")
-    public double getItemsPrice() {
+    @Step("Получаем сумму всех цен товаров в корзине")
+    public double getTotalItemsPrice() {
         List<WebElement> allItemsPrice = driver.findElements(ITEM_PRICE);
         double totalPrice = 0;
         for (WebElement itemPrice : allItemsPrice) {
@@ -40,9 +42,19 @@ public class CheckoutOverviewPage extends BasePage{
         return totalPrice;
     }
 
-    @Step("Получаем общую сумму цен всех товаров в корзине")
+    @Step("Получаем итоговую сумму со страницы")
     public double getItemTotal() {
         String itemTotalText = getWebElement(ITEM_TOTAL).getText();
         return Double.parseDouble(itemTotalText.replaceAll("[^0-9.]", ""));
+    }
+
+    @Step("Получаем локатор кнопки 'Finish'")
+    private WebElement getFinishButton() {
+        return getWebElement(FINISH);
+    }
+
+    @Step("Получаем локатор кнопки 'Cancel'")
+    private WebElement getCancelButton() {
+        return getWebElement(CANCEL);
     }
 }

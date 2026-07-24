@@ -40,5 +40,7 @@ public class BasePage {
         return driver.findElement(locator);
     }
 
-
+    public String getCurrentUrl() {
+        return driver.getCurrentUrl();
+    }
 }

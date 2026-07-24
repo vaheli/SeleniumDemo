@@ -22,22 +22,34 @@ public class CheckoutPage extends BasePage {
         getFieldPostalCode().sendKeys(postalCode);
     }
 
-    @Step("Получаем локатор плейсхолдера имени")
-    public String getFieldFirstNamePlaceholder() {
+    @Step("Получаем placeholder поля 'Имя'")
+    public String getFirstNamePlaceholderValue() {
         return getFieldFirstName().getAttribute("placeholder");
     }
 
-    @Step("Получаем локатор плейсхолдера фамилии")
-    public String getFieldLastNamePlaceholder() {
+    @Step("Получаем placeholder поля 'Фамилия' ")
+    public String getLastNamePlaceholderValue() {
         return getFieldLastName().getAttribute("placeholder");
     }
 
     @Step("Проверяем поле ввода почтового индекса")
-    public boolean isMatchesFieldPostalCode(String value) {
+    public boolean isPostalCodeValid(String value) {
         getFieldPostalCode().sendKeys(value);
         String postalCode = getFieldPostalCode().getAttribute("value");
         assert postalCode != null;
         return !postalCode.matches("^[A-Za-zА-Яа-яЁё]+$");
+    }
+
+    @Step("Нажимаем кнопку 'Continue' для перехода к предварительному просмотру заказа")
+    public CheckoutOverviewPage clickContinueButton() {
+        getContinueButton().click();
+        return new CheckoutOverviewPage(driver);
+    }
+
+    @Step("Нажимаем кнопку 'Cancel' для возврата в корзину")
+    public BasketPage clickCancelButton() {
+        getCancelButton().click();
+        return new BasketPage(driver);
     }
 
     @Step("Получаем локатор кнопки 'Continue'")
@@ -45,14 +57,14 @@ public class CheckoutPage extends BasePage {
         return getWebElement(CONTINUE);
     }
 
-    @Step("Получаем локатор кнопки 'Cancel'")
-    public WebElement getCancelButton() {
-        return getWebElement(CANSEL);
+    @Step("Получаем цвет фона кнопки 'Continue'")
+    public String getContinueButtonColor() {
+        return getWebElement(CSS_SELECTOR_CONTINUE).getCssValue("background-color");
     }
 
-    @Step("Получаем цвет фона кнопки 'Continue'")
-    public String getContinueBackgroundColor() {
-        return getWebElement(CSS_SELECTOR_CONTINUE).getCssValue("background-color");
+    @Step("Получаем локатор кнопки 'Cancel'")
+    private WebElement getCancelButton() {
+        return getWebElement(CANSEL);
     }
 
     @Step("Получаем локатор поля ввода 'Имя'")

@@ -1,5 +1,9 @@
 package enums;
 
+import lombok.*;
+
+@AllArgsConstructor
+@Getter
 public enum TitleNaming {
     HEADER("Swag Labs"),
     PRODUCTS("Products"),
@@ -9,12 +13,4 @@ public enum TitleNaming {
     FINISH("Checkout: Complete!");
 
     private final String displayName;
-
-    TitleNaming(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
 }

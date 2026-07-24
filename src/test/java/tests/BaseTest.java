@@ -60,11 +60,6 @@ public class BaseTest {
         checkoutCompletePage = new CheckoutCompletePage(driver);
     }
 
-    @Step("Получаем заголовок страницы")
-    public String checkHeaderTitle() {
-        return navigationPanel.getHeaderTitle();
-    }
-
     @Step("Закрываем браузер")
     @AfterMethod
     public void close() {
