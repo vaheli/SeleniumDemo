@@ -1,52 +1,46 @@
 package pages;
 
-import org.openqa.selenium.WebDriver;
+import header.NavigationPanel;
+import io.qameta.allure.Step;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import utils.PropertyReader;
 
 import java.time.Duration;
 
-/**
- * Базовая страница для всех страниц приложения.
- * Содержит общую логику для взаимодействия с элементами страницы
- * и основные константы для XPath-выражений.
- */
 public class BasePage {
-
-    private static final String BASE_URL = "https://www.saucedemo.com/";
-    
-    /**
-     * Паттерн XPath для поиска элементов по атрибуту data-test.
-     */
+    public static final String BASE_URL = PropertyReader.getProperty("saucedemo.url");
     public static final String DATA_TEXT_PATTERN = "//*[@data-test='%s']";
-    
-    /**
-     * Паттерн XPath для поиска иконок ошибок по атрибуту data-test.
-     */
-    public static final String DATA_ICON_PATTERN = "//div[input[@data-test='%s']]//*[@data-icon='times-circle']";
-    
-    /**
-     * Паттерн XPath для поиска кнопок inventory items.
-     */
+    public static final String DATA_ICON_PATTERN = "//div[input[@data-test='%s']]//*[@data-icon='circle-xmark']";
     public static final String INVENTORY_ITEM_BUTTON_PATTERN =
             "//*[%s]//ancestor::div[@data-test='inventory-item']//child::button";
 
     WebDriver driver;
     WebDriverWait wait;
+    public NavigationPanel navigationPanel;
 
-    /**
-     * Конструктор базовой страницы.
-     *
-     * @param driver драйвер Selenium для взаимодействия с браузером
-     */
     public BasePage(WebDriver driver) {
         this.driver = driver;
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        this.navigationPanel = new NavigationPanel(driver);
     }
 
-    /**
-     * Открывает главную страницу приложения.
-     */
+    @Step("Открываем страницу авторизации")
     public void open() {
         driver.get(BASE_URL);
+    }
+
+    @Step("Открываем страницу BASE_URL + {url}")
+    public void open(String url) {
+        driver.get(BASE_URL + url);
+    }
+
+    @Step("Получаем элемент по локатору")
+    public WebElement getWebElement(By locator) {
+        return driver.findElement(locator);
+    }
+
+    public String getCurrentUrl() {
+        return driver.getCurrentUrl();
     }
 }
